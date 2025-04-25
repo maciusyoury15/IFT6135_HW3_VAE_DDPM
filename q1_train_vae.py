@@ -177,6 +177,7 @@ def show_samples(samples, nrow=4, title="Generated Samples"):
 
     plt.suptitle(title)
     plt.tight_layout()
+    plt.savefig("vae_visual_samples_plot.png")
     plt.show()
 
 def latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.0):
@@ -200,7 +201,6 @@ def latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.0):
 
         return images
 
-
 def show_latent_traversals(images, steps=5):
     latent_dim = len(images)
     fig, axs = plt.subplots(latent_dim, steps, figsize=(steps, latent_dim))
@@ -212,6 +212,7 @@ def show_latent_traversals(images, steps=5):
 
     plt.suptitle("Latent Traversals (1 row per latent dimension)")
     plt.tight_layout()
+    plt.savefig("vae_latent_traversals.png")
     plt.show()
 
 
@@ -258,6 +259,7 @@ def plot_interpolations(latent_imgs, data_imgs, title="Latent vs Data Space Inte
     axs[1, 0].set_ylabel("Data", fontsize=12)
     plt.suptitle(title)
     plt.tight_layout()
+    plt.savefig("vae_latent_data_space_plot.png")
     plt.show()
 
 
