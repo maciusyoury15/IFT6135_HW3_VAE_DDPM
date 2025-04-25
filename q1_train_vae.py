@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import torch
+import os
 import matplotlib.pyplot as plt
 import torch.utils.data
 from torch import nn, optim
@@ -34,6 +35,10 @@ torch.manual_seed(args.seed)
 # print("Seed: ", args.seed)
 # print("Log interval: ", args.log_interval, "\n\n")
 
+gdrive_dir = '/content/drive/MyDrive/IFT6135_HW3'
+save_dir = os.makedirs(gdrive_dir, 'vae', exist_ok=True)
+
+
 if args.cuda:
     device = torch.device("cuda")
 else:
@@ -41,11 +46,11 @@ else:
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=True, download=True,
+    datasets.MNIST(f'{save_dir}/data', train=True, download=True,
                    transform=transforms.ToTensor()),
     batch_size=args.batch_size, shuffle=True, **kwargs)
 test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
+    datasets.MNIST(f'{save_dir}/data', train=False, transform=transforms.ToTensor()),
     batch_size=args.batch_size, shuffle=False, **kwargs)
 
 
@@ -134,7 +139,7 @@ def validate(epoch):
     return val_loss
 
 
-def plot_losses(train_losses, val_losses):
+def plot_losses(train_losses, val_losses, save_dir=save_dir):
     epochs = list(range(1, len(train_losses) + 1))
 
     plt.figure(figsize=(8, 5))
@@ -154,7 +159,7 @@ def plot_losses(train_losses, val_losses):
     plt.grid(True)
 
     plt.tight_layout()
-    plt.savefig("vae_loss_plot.png")
+    plt.savefig(f"{save_dir}/vae_loss_plot.png")
     plt.show()
 
 
@@ -166,7 +171,7 @@ def generate_samples(model, n_samples=16, latent_dim=20):
         return samples.view(n_samples, 1, 28, 28)  # For MNIST-like data
 
 
-def show_samples(samples, nrow=4, title="Generated Samples"):
+def show_samples(samples, nrow=4, title="Generated Samples", save_dir=save_dir):
     n_samples = samples.size(0)
     fig, axs = plt.subplots(nrow, nrow, figsize=(6, 6))
     axs = axs.flatten()
@@ -177,7 +182,7 @@ def show_samples(samples, nrow=4, title="Generated Samples"):
 
     plt.suptitle(title)
     plt.tight_layout()
-    plt.savefig("vae_visual_samples_plot.png")
+    plt.savefig(f"{save_dir}/vae_visual_samples_plot.png")
     plt.show()
 
 def latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.0):
@@ -201,7 +206,7 @@ def latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.0):
 
         return images
 
-def show_latent_traversals(images, steps=5):
+def show_latent_traversals(images, steps=5, save_dir=save_dir):
     latent_dim = len(images)
     fig, axs = plt.subplots(latent_dim, steps, figsize=(steps, latent_dim))
 
@@ -212,7 +217,7 @@ def show_latent_traversals(images, steps=5):
 
     plt.suptitle("Latent Traversals (1 row per latent dimension)")
     plt.tight_layout()
-    plt.savefig("vae_latent_traversals.png")
+    plt.savefig(f"{save_dir}/vae_latent_traversals.png")
     plt.show()
 
 
@@ -245,7 +250,7 @@ def interpolate_latent_vs_data(model, latent_dim=20, steps=11):
         return latent_imgs, data_imgs
 
 
-def plot_interpolations(latent_imgs, data_imgs, title="Latent vs Data Space Interpolation"):
+def plot_interpolations(latent_imgs, data_imgs, save_dir=save_dir):
     steps = len(latent_imgs)
     fig, axs = plt.subplots(2, steps, figsize=(steps, 2))
 
@@ -257,9 +262,9 @@ def plot_interpolations(latent_imgs, data_imgs, title="Latent vs Data Space Inte
 
     axs[0, 0].set_ylabel("Latent", fontsize=12)
     axs[1, 0].set_ylabel("Data", fontsize=12)
-    plt.suptitle(title)
+    plt.suptitle(title="Latent vs Data Space Interpolation")
     plt.tight_layout()
-    plt.savefig("vae_latent_data_space_plot.png")
+    plt.savefig(f"{save_dir}/vae_latent_data_space_plot.png")
     plt.show()
 
 
