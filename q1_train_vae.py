@@ -36,7 +36,8 @@ torch.manual_seed(args.seed)
 # print("Log interval: ", args.log_interval, "\n\n")
 
 gdrive_dir = '/content/drive/MyDrive/IFT6135_HW3'
-save_dir = os.makedirs(gdrive_dir, 'vae', exist_ok=True)
+save_dir = os.path.join(gdrive_dir, 'vae')
+os.makedirs(gdrive_dir, exist_ok=True)
 
 
 if args.cuda:
@@ -288,3 +289,6 @@ if __name__ == "__main__":
 
     images = latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.5)
     show_latent_traversals(images)
+
+    latent_imgs, data_imgs = interpolate_latent_vs_data(model, latent_dim=20, steps=11)
+    plot_interpolations(latent_imgs, data_imgs)

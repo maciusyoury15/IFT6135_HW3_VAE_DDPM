@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e322ce76-4012-4822-8f95-423a6ffdd501" name="Changes" comment="q1_train_vae.py">
+    <list default="true" id="e322ce76-4012-4822-8f95-423a6ffdd501" name="Changes" comment="updates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/q1_train_vae.py" beforeDir="false" afterPath="$PROJECT_DIR$/q1_train_vae.py" afterDir="false" />
     </list>
@@ -72,7 +72,7 @@
       <workItem from="1745520085277" duration="73000" />
       <workItem from="1745520328245" duration="21325000" />
       <workItem from="1745559266347" duration="7873000" />
-      <workItem from="1745617259417" duration="5012000" />
+      <workItem from="1745617259417" duration="7882000" />
     </task>
     <task id="LOCAL-00001" summary="vae">
       <option name="closed" value="true" />
@@ -106,7 +106,23 @@
       <option name="project" value="LOCAL" />
       <updated>1745620927183</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="q1_train_vae.py">
+      <option name="closed" value="true" />
+      <created>1745622479411</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1745622479411</updated>
+    </task>
+    <task id="LOCAL-00006" summary="updates">
+      <option name="closed" value="true" />
+      <created>1745623075571</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1745623075571</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -115,7 +131,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="vae" />
     <MESSAGE value="q1_train_vae.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="q1_train_vae.py" />
+    <MESSAGE value="updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="updates" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/HW3$q1_train_vae.coverage" NAME="q1_train_vae Coverage Results" MODIFIED="1745617395725" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
