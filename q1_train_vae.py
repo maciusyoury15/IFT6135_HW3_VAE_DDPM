@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import torch
+import matplotlib.pyplot as plt
 import torch.utils.data
 from torch import nn, optim
 from torch.nn import functional as F
@@ -23,8 +24,15 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
+args.epochs = 20
 
 torch.manual_seed(args.seed)
+
+# print("Epochs: ", args.epochs)
+# print("Batch size: ", args.batch_size)
+# print("CUDA: ", args.cuda)
+# print("Seed: ", args.seed)
+# print("Log interval: ", args.log_interval, "\n\n")
 
 if args.cuda:
     device = torch.device("cuda")
@@ -75,17 +83,13 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 
 def loss_function(recon_x, x, mu, logvar):
-    # Ensure mu and logvar are tensors
-    assert isinstance(mu, torch.Tensor), "Expected mu to be a tensor"
-    assert isinstance(logvar, torch.Tensor), "Expected logvar to be a tensor"
-
     batch_size = mu.size(0)
 
     # Reconstruction loss: Negative log-likelihood under Bernoulli
-    recon_loss = -log_likelihood_bernoulli(recon_x, x.view(batch_size, -1)).sum()
-    
+    recon_loss = -log_likelihood_bernoulli(recon_x, x.view(-1, 784)).sum()
+
     # KL divergence between q(z|x) = N(mu, sigma^2) and p(z) = N(0, I)
-    mu_p = torch.zeros_like(mu),
+    mu_p = torch.zeros_like(mu)
     logvar_p = torch.zeros_like(logvar)
 
     kl = kl_gaussian_gaussian_analytic(mu, logvar, mu_p, logvar_p).sum()
@@ -110,11 +114,172 @@ def train(epoch):
                 100. * batch_idx / len(train_loader),
                 loss.item() / len(data)))
 
-    print('====> Epoch: {} Average loss: {:.4f}'.format(
-          epoch, train_loss / len(train_loader.dataset)))
+    train_loss /= len(train_loader.dataset)
+    print(f'====> Training loss (average) after epoch {epoch}: {train_loss:.4f}')
+    return train_loss
+
+
+def validate(epoch):
+    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for data, _ in test_loader:
+            data = data.to(device)
+            recon_batch, mu, logvar = model(data)
+            loss = loss_function(recon_batch, data, mu, logvar)
+            val_loss += loss.item()
+
+    val_loss /= len(test_loader.dataset)
+    print(f"====> Validation loss (average) after epoch {epoch}: {val_loss:.4f}")
+    return val_loss
+
+
+def plot_losses(train_losses, val_losses):
+    epochs = list(range(1, len(train_losses) + 1))
+
+    plt.figure(figsize=(8, 5))
+
+    # Plot with specified colors
+    plt.plot(epochs, train_losses, color='red', marker='o', label='Training Loss')
+    plt.plot(epochs, val_losses, color='blue', marker='s', label='Validation Loss')
+
+    # Dashed threshold line
+    plt.axhline(y=104, color='red', linestyle='--', label='Target Threshold (104)')
+
+    # Labels and styling
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('VAE Training & Validation Loss')
+    plt.legend()
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.savefig("vae_loss_plot.png")
+    plt.show()
+
+
+def generate_samples(model, n_samples=16, latent_dim=20):
+    model.eval()
+    with torch.no_grad():
+        z = torch.randn(n_samples, latent_dim).to(device)  # Sample from N(0, I)
+        samples = model.decode(z).cpu()  # Decode to image space
+        return samples.view(n_samples, 1, 28, 28)  # For MNIST-like data
+
+
+def show_samples(samples, nrow=4, title="Generated Samples"):
+    n_samples = samples.size(0)
+    fig, axs = plt.subplots(nrow, nrow, figsize=(6, 6))
+    axs = axs.flatten()
+
+    for i in range(n_samples):
+        axs[i].imshow(samples[i].squeeze(), cmap='gray')
+        axs[i].axis('off')
+
+    plt.suptitle(title)
+    plt.tight_layout()
+    plt.show()
+
+def latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.0):
+    model.eval()
+    with torch.no_grad():
+        # 1. Base z ~ N(0, I)
+        base_z = torch.randn(1, latent_dim).to(device)
+
+        # 2. Prepare grid of z variants
+        traversal_range = torch.linspace(-epsilon, epsilon, steps).to(device)
+        images = []
+
+        for i in range(latent_dim):
+            row = []
+            for shift in traversal_range:
+                z_new = base_z.clone()
+                z_new[0, i] += shift
+                img = model.decode(z_new).view(28, 28).cpu()
+                row.append(img)
+            images.append(row)
+
+        return images
+
+
+def show_latent_traversals(images, steps=5):
+    latent_dim = len(images)
+    fig, axs = plt.subplots(latent_dim, steps, figsize=(steps, latent_dim))
+
+    for i in range(latent_dim):
+        for j in range(steps):
+            axs[i, j].imshow(images[i][j], cmap='gray')
+            axs[i, j].axis('off')
+
+    plt.suptitle("Latent Traversals (1 row per latent dimension)")
+    plt.tight_layout()
+    plt.show()
+
+
+def interpolate_latent_vs_data(model, latent_dim=20, steps=11):
+    model.eval()
+    with torch.no_grad():
+        # Sample z0 and z1 from N(0, I)
+        z0 = torch.randn(1, latent_dim).to(device)
+        z1 = torch.randn(1, latent_dim).to(device)
+
+        # Decode z0 and z1
+        x0 = model.decode(z0).view(28, 28).cpu()
+        x1 = model.decode(z1).view(28, 28).cpu()
+
+        alphas = torch.linspace(0, 1, steps).to(device)
+
+        # Latent space interpolation
+        latent_imgs = []
+        for alpha in alphas:
+            z_alpha = alpha * z0 + (1 - alpha) * z1
+            x_alpha = model.decode(z_alpha).view(28, 28).cpu()
+            latent_imgs.append(x_alpha)
+
+        # Data space interpolation
+        data_imgs = []
+        for alpha in alphas:
+            x_hat = alpha * x0 + (1 - alpha) * x1
+            data_imgs.append(x_hat)
+
+        return latent_imgs, data_imgs
+
+
+def plot_interpolations(latent_imgs, data_imgs, title="Latent vs Data Space Interpolation"):
+    steps = len(latent_imgs)
+    fig, axs = plt.subplots(2, steps, figsize=(steps, 2))
+
+    for i in range(steps):
+        axs[0, i].imshow(latent_imgs[i], cmap='gray')
+        axs[0, i].axis('off')
+        axs[1, i].imshow(data_imgs[i], cmap='gray')
+        axs[1, i].axis('off')
+
+    axs[0, 0].set_ylabel("Latent", fontsize=12)
+    axs[1, 0].set_ylabel("Data", fontsize=12)
+    plt.suptitle(title)
+    plt.tight_layout()
+    plt.show()
+
+
+
 
 if __name__ == "__main__":
-    for epoch in range(1, args.epochs + 1):
-        train(epoch)
+    train_losses = []
+    val_losses = []
 
-    torch.save(model, 'model.pt')
+    for epoch in range(1, args.epochs + 1):
+        train_loss = train(epoch)
+        val_loss = validate(epoch)
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
+
+    torch.save(model.state_dict(), 'vae_model.pt')
+
+    # Plot training and validation losses
+    plot_losses(train_losses, val_losses)
+
+    samples = generate_samples(model, n_samples=16)
+    show_samples(samples)
+
+    images = latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.5)
+    show_latent_traversals(images)
