@@ -46,13 +46,15 @@ else:
     device = torch.device("cpu")
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
+
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST(f'{save_dir}/data', train=True, download=True,
                    transform=transforms.ToTensor()),
-    batch_size=args.batch_size, shuffle=True, **kwargs)
+                    batch_size=args.batch_size, shuffle=True, **kwargs)
+
 test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST(f'{save_dir}/data', train=False, transform=transforms.ToTensor()),
-    batch_size=args.batch_size, shuffle=False, **kwargs)
+    datasets.MNIST(f'{save_dir}/data', train=False,
+                   transform=transforms.ToTensor()), batch_size=args.batch_size, shuffle=False, **kwargs)
 
 
 class VAE(nn.Module):
@@ -263,7 +265,7 @@ def plot_interpolations(latent_imgs, data_imgs, save_dir=save_dir):
 
     axs[0, 0].set_ylabel("Latent", fontsize=12)
     axs[1, 0].set_ylabel("Data", fontsize=12)
-    plt.suptitle(title="Latent vs Data Space Interpolation")
+    plt.suptitle("Latent vs Data Space Interpolation")
     plt.tight_layout()
     plt.savefig(f"{save_dir}/vae_latent_data_space_plot.png")
     plt.show()
