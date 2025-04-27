@@ -46,8 +46,10 @@ def log_likelihood_normal(mu, logvar, z):
     logvar = logvar.view(batch_size, -1)
     z = z.view(batch_size, -1)
 
+    log_two_pi = torch.log(torch.tensor(2 * torch.pi))
+
     var = torch.exp(logvar)
-    ll_normal = -0.5 * (torch.log(2 * torch.pi) + logvar + ((z - mu) ** 2) / var)
+    ll_normal = -0.5 * (log_two_pi + logvar + ((z - mu) ** 2) / var)
     
     return ll_normal.sum(dim=1)
 
@@ -122,11 +124,13 @@ def kl_gaussian_gaussian_mc(mu_q, logvar_q, mu_p, logvar_p, num_samples=1):
 
     # Sample from Q ~ N(mu_q, sigma_q^2)
     std_q = torch.exp(0.5 * logvar_q)
-    samples = mu_q + std_q * torch.randn_like(std_q)
+    z = mu_q + std_q * torch.randn_like(std_q)
+
+    log_two_pi = torch.log(torch.tensor(2 * torch.pi))
 
     # Log-likelihood under q, and p (if you want K: estimate)
-    log_q = -0.5 * (torch.log(2 * torch.pi) + logvar_q + ((z - mu_q) ** 2) / torch.exp(logvar_q))
-    log_p = -0.5 * (torch.log(2 * torch.pi) + logvar_p + ((z - mu_p) ** 2) / torch.exp(logvar_p))
+    log_q = -0.5 * (log_two_pi + logvar_q + ((z - mu_q) ** 2) / torch.exp(logvar_q))
+    log_p = -0.5 * (log_two_pi + logvar_p + ((z - mu_p) ** 2) / torch.exp(logvar_p))
 
     log_q = log_q.sum(dim=2)
     log_p = log_p.sum(dim=2)

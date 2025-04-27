@@ -1,5 +1,5 @@
 import torchvision 
-from args import * 
+from ddpm_utils.args import *
 
 class MNISTDataset(torchvision.datasets.MNIST):
     def __init__(self):

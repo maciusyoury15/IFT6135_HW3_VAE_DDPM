@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 from torch.amp import GradScaler, autocast
 import copy
+import os
 import numpy as np
 
 from ddpm_utils.args import * 
@@ -138,12 +139,8 @@ class Trainer:
 
                 if self.args.nb_save is not None and step in saving_steps:
                     print(f"Showing/saving samples from epoch {self.current_epoch}")
-                    self.show_save(
-                        x,
-                        show=True,
-                        save=True,
-                        file_name=f"DDPM_epoch_{self.current_epoch}_sample_{t_}.png",
-                    )
+                    file_name = f"DDPM_epoch_{self.current_epoch}_sample_{step}.png"
+                    self.show_save(x, show=True, save=True, file_name=file_name)
         return x
 
     def save_model(self):
@@ -166,7 +163,8 @@ class Trainer:
 
         plt.tight_layout()
         if save:
-            plt.savefig('images/' + file_name)
+            os.makedirs("images", exist_ok=True)
+            plt.savefig(os.path.join("images", file_name))
         if show:
             plt.show()
         plt.close(fig)
@@ -204,4 +202,4 @@ class Trainer:
             if step in steps_to_show:
                 images.append(x.detach().cpu())
 
-        return images
+        return torch.stack(images)
