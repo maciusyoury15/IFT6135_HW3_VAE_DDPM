@@ -8,10 +8,12 @@ class DenoiseDiffusion():
     def __init__(self, eps_model: nn.Module, n_steps: int, device: torch.device):
         super().__init__()
         self.eps_model = eps_model
+        self.device = device
+        self.n_steps = n_steps
+
         self.beta = torch.linspace(0.0001, 0.02, n_steps).to(device)
         self.alpha = 1.0 - self.beta
         self.alpha_bar = torch.cumprod(self.alpha, dim=0)
-        self.n_steps = n_steps
         self.sigma2 = self.beta
 
 
@@ -52,8 +54,8 @@ class DenoiseDiffusion():
 
         coef1 = 1 / torch.sqrt(alpha_t)
         coef2 = (1 - alpha_t) / torch.sqrt(1 - alpha_bar_t)
-        eps_theta = self.eps_model(xt, t)
 
+        eps_theta = self.eps_model(xt, t)
         mu_theta = coef1 * (xt - coef2 * eps_theta)
         var = beta_t
 
@@ -92,23 +94,26 @@ class DenoiseDiffusion():
             torch.manual_seed(42)
 
         batch_size = x0.shape[0]
+        dim = tuple(range(1, x0.ndim))
+
         t = torch.randint(0, self.n_steps, (batch_size,), device=x0.device, dtype=torch.long)
 
         if noise is None:
             noise = torch.randn_like(x0)
 
         # Get relevant schedule values
-        alpha_bar_t = self.alpha_bar[t].view(batch_size, 1, 1, 1)
+        alpha_bar = torch.cumprod(1.0 - torch.linspace(0.0001, 0.02, self.n_steps).to(x0.device), dim=0)
+        alpha_bar_t = alpha_bar[t].view(-1, 1, 1, 1)
         sqrt_alpha_bar = torch.sqrt(alpha_bar_t)
-        sqrt_one_minus_alpha_bar = torch.sqrt(1 - alpha_bar_t)
+        sqrt_one_minus_alpha_bar = torch.sqrt(1.0 - alpha_bar_t)
 
         # Sample x_t from q(x_t | x_0)
         xt = sqrt_alpha_bar * x0 + sqrt_one_minus_alpha_bar * noise
 
         # Predict noise using model
-        pred_noise = self.eps_model(xt, t)
+        pred_eps = self.eps_model(xt, t)
 
-        # MSE between predicted and actual noise
-        loss = torch.mean((pred_noise - noise) ** 2)
+        loss = (pred_eps - noise) ** 2
+        loss = loss.sum(dim=dim).mean()  # sum over pixels, mean over batch
 
         return loss

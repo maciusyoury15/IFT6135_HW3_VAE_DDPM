@@ -166,7 +166,7 @@ class UNet(nn.Module):
         self.outc = nn.Conv2d(16, c_out, kernel_size=1)
 
 
-    def unet_forwad(self, x, labels):
+    def unet_forwad(self, x, labels=None):
         x1 = self.inc(x)
         x2 = self.down1(x1, labels)
         #x2 = self.sa1(x2)

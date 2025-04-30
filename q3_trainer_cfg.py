@@ -1,12 +1,13 @@
 
 import torch
 import torch.utils.data
-import torchvision
-from torch import nn
-from typing import Tuple, Optional
-import torch.nn.functional as F
+import os
+# import torchvision
+# from torch import nn
+# from typing import Tuple, Optional
+# import torch.nn.functional as F
+# from easydict import EasyDict
 from tqdm import tqdm
-from easydict import EasyDict
 import matplotlib.pyplot as plt
 from torch.amp import GradScaler, autocast
 
@@ -89,8 +90,8 @@ class Trainer:
                 scaler.scale(loss).backward()
                 scaler.step(self.optimizer)
                 scaler.update()
-                loss.backward()
-                self.optimizer.step()
+                # loss.backward()
+                # self.optimizer.step()
                 self.ema.step_ema(self.ema_model, self.eps_model)
 
                 running_loss += loss.item()
@@ -116,59 +117,62 @@ class Trainer:
 
                 if (current_epoch + 1) % self.args.save_every_n_epochs == 0:
                     self.save_model()
-    
+
     def sample(self, labels=None, cfg_scale=3., n_steps=None, set_seed=False):
         if set_seed:
             torch.manual_seed(42)
         if n_steps is None:
             n_steps = self.args.n_steps
-            
-        self.eps_model.eval()
-            
-        with torch.no_grad():
-    
-            z_t = torch.randn(
-                        [
-                            self.args.n_samples,
-                            self.args.image_channels,
-                            self.args.image_size,
-                            self.args.image_size,
-                        ],
-                        device=self.args.device
-                    )
-            
-            if labels == None:
-                labels = torch.randint(0, 9, (self.args.n_samples,), device=self.args.device)
-                
-            if self.args.nb_save is not None:
-                saving_steps = [self.args["n_steps"] - 1]
-            
-            # Remove noise for $T$ steps
-            for t_ in tqdm(range(n_steps)):
-            
-                t = n_steps - t_ - 1
-                t = torch.full((self.args.n_samples,), t, device=z_t.device, dtype=torch.long)
-                
-                #TODO: Get lambda and lambda prim based on t 
-                raise NotImplementedError
-                
-                #TODO: Add linear interpolation between unconditional and conditional preidiction according to 3 in Algo. 2 using cfg_scale
-                raise NotImplementedError
-                    
-                #TODO: Get x_t then sample z_t from the reverse process according to 4. and 5. in Algo 2.
-                raise NotImplementedError
 
-                if self.args.nb_save is not None and t_ in saving_steps:
-                    print(f"Showing/saving samples from epoch {self.current_epoch} with labels: {labels.tolist()}")
-                    show_save(
-                        x_t,
-                        labels,
+        # self.eps_model.eval()
+        with torch.no_grad():
+            z_t = torch.randn(
+                    [
+                        self.args.n_samples,
+                        self.args.image_channels,
+                        self.args.image_size,
+                        self.args.image_size,
+                    ],
+                    device=self.args.device,
+                )
+
+            if labels is None:
+                labels = torch.randint(0, 9, (self.args.n_samples,), device=self.args.device)
+
+            if self.args.nb_save is not None:
+                saving_steps = [n_steps - 1]
+
+            # for t_val in tqdm(range(n_steps)):
+            for t_val in range(n_steps):
+                # t_val = n_steps - 1 - t_
+                t = torch.full((self.args.n_samples,), t_val, device=z_t.device, dtype=torch.long)
+                t_prim = torch.full((self.args.n_samples,), t_val+1, device=z_t.device, dtype=torch.long)
+
+                lambda_t = self.diffusion.get_lambda(t)
+                lambda_t_prim = self.diffusion.get_lambda(t_prim)
+
+                eps_cond = self.eps_model(z_t, labels)
+                eps_uncond = self.eps_model(z_t, None)
+                eps_theta = (1 + cfg_scale) * eps_cond - cfg_scale * eps_uncond
+
+                alpha = self.diffusion.alpha_lambda(lambda_t)
+                sigma = self.diffusion.sigma_lambda(lambda_t)
+                x_t = (z_t - sigma * eps_theta) / alpha
+
+                z_t = self.diffusion.p_sample(z_t, lambda_t, lambda_t_prim, x_t) if t_val < n_steps - 1 else x_t
+
+                if self.args.nb_save is not None and t_val in saving_steps:
+                    print(f"Showing/saving samples from epoch {self.current_epoch} with labels: {labels.cpu().tolist()}")
+                    self.show_save(
+                        img_tensor=z_t,
+                        labels=labels,
                         show=True,
                         save=True,
-                        file_name=f"DDPM_epoch_{self.current_epoch}_sample_{t_}.png",
+                        file_name=f"CFG_epoch_{self.current_epoch}_sample_{t_val}.png"
                     )
-            self.eps_model.train()
-        return x_t
+
+        # self.eps_model.train()
+        return z_t
 
     def save_model(self):
         torch.save({
@@ -177,21 +181,22 @@ class Trainer:
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 }, self.args.MODEL_PATH)
     
-def show_save(img_tensor, labels=None, show=True, save=True, file_name="sample.png"):
-    fig, axs = plt.subplots(3, 3, figsize=(10, 10))  # Create a 4x4 grid of subplots
-    assert img_tensor.shape[0] >= 9, "Number of images should be at least 9"
-    img_tensor = img_tensor[:9]
-    for i, ax in enumerate(axs.flat):
-        # Remove the channel dimension and convert to numpy
-        img = img_tensor[i].squeeze().cpu().numpy()
-        label = labels[i].item()
-        ax.imshow(img, cmap="gray")  # Display the image in grayscale
-        ax.set_title(f'Digit:{label}')
-        ax.axis("off")  # Hide the axis
+    def show_save(self, img_tensor, labels=None, show=True, save=True, file_name="sample.png"):
+        fig, axs = plt.subplots(3, 3, figsize=(10, 10))  # Create a 4x4 grid of subplots
+        assert img_tensor.shape[0] >= 9, "Number of images should be at least 9"
+        img_tensor = img_tensor[:9]
+        for i, ax in enumerate(axs.flat):
+            # Remove the channel dimension and convert to numpy
+            img = img_tensor[i].squeeze().cpu().numpy()
+            label = labels[i].item()
+            ax.imshow(img, cmap="gray")  # Display the image in grayscale
+            ax.set_title(f'Digit:{label}')
+            ax.axis("off")  # Hide the axis
 
-    plt.tight_layout()
-    if save:
-        plt.savefig(file_name)
-    if show:
-        plt.show()
-    plt.close(fig)
+        plt.tight_layout()
+        if save:
+            os.makedirs("images", exist_ok=True)
+            plt.savefig(os.path.join("images", file_name))
+        if show:
+            plt.show()
+        plt.close(fig)
