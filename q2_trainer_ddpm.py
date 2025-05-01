@@ -108,44 +108,6 @@ class Trainer:
                     self.save_model()
 
 
-    # def sample(self, n_steps=None, set_seed=False):
-    #     if set_seed:
-    #         torch.manual_seed(42)
-    #     if n_steps is None:
-    #         n_steps = self.args.n_steps
-    #
-    #     self.eps_model.eval()
-    #
-    #     with torch.no_grad():
-    #         x = torch.randn(
-    #             [
-    #                 self.args.n_samples,
-    #                 self.args.image_channels,
-    #                 self.args.image_size,
-    #                 self.args.image_size,
-    #             ],
-    #             device=self.args.device,
-    #         )
-    #
-    #         # Steps at which to save intermediate samples
-    #         if self.args.nb_save is not None:
-    #             saving_steps = [n_steps - 1]
-    #
-    #         # Remove noise for $T$ steps
-    #         for step in tqdm(reversed(range(1, n_steps+1))):
-    #             # Sample x_{t-1} from p_theta(x_{t-1} | x_t)
-    #             t = torch.full((x.size(0),), step, device=self.args.device, dtype=torch.long)
-    #             x = self.diffusion.p_sample(x, t, set_seed=set_seed)
-    #
-    #             if self.args.nb_save is not None and step in saving_steps:
-    #                 print(f"Showing/saving samples from epoch {self.current_epoch}")
-    #                 file_name = f"DDPM_epoch_{self.current_epoch}_sample_{step}.png"
-    #                 self.show_save(x, show=True, save=True, file_name=file_name)
-    #
-    #     self.eps_model.train()
-    #     return x
-
-
     def sample(self, n_steps=None, set_seed=False):
         if set_seed:
             torch.manual_seed(42)
