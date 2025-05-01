@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="e322ce76-4012-4822-8f95-423a6ffdd501" name="Changes" comment="ddpm updates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02 - DDPM.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/02 - DDPM.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/q2_trainer_ddpm.py" beforeDir="false" afterPath="$PROJECT_DIR$/q2_trainer_ddpm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/q3_trainer_cfg.py" beforeDir="false" afterPath="$PROJECT_DIR$/q3_trainer_cfg.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,7 +76,7 @@
       <workItem from="1745724412728" duration="52977000" />
       <workItem from="1745979468427" duration="127000" />
       <workItem from="1746057650637" duration="1233000" />
-      <workItem from="1746136485892" duration="468000" />
+      <workItem from="1746136485892" duration="2989000" />
     </task>
     <task id="LOCAL-00001" summary="vae">
       <option name="closed" value="true" />
@@ -159,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745979500523</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="ddpm updates">
+      <option name="closed" value="true" />
+      <created>1746137092857</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1746137092857</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

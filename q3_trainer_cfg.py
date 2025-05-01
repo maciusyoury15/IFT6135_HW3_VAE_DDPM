@@ -124,7 +124,7 @@ class Trainer:
         if n_steps is None:
             n_steps = self.args.n_steps
 
-        # self.eps_model.eval()
+        self.eps_model.eval()
         with torch.no_grad():
             z_t = torch.randn(
                     [
@@ -136,43 +136,43 @@ class Trainer:
                     device=self.args.device,
                 )
 
-            if labels is None:
+            if labels == None:
                 labels = torch.randint(0, 9, (self.args.n_samples,), device=self.args.device)
 
             if self.args.nb_save is not None:
                 saving_steps = [n_steps - 1]
 
-            # for t_val in tqdm(range(n_steps)):
-            for t_val in range(n_steps):
-                # t_val = n_steps - 1 - t_
+            # Remove noise for $T$ steps
+            for t_ in tqdm(range(n_steps)):
+                t_val = n_steps - 1 - t_
                 t = torch.full((self.args.n_samples,), t_val, device=z_t.device, dtype=torch.long)
-                t_prim = torch.full((self.args.n_samples,), t_val+1, device=z_t.device, dtype=torch.long)
+                # t_prim = torch.full((self.args.n_samples,), t_val+1, device=z_t.device, dtype=torch.long)
 
                 lambda_t = self.diffusion.get_lambda(t)
-                lambda_t_prim = self.diffusion.get_lambda(t_prim)
+                lambda_t_prim = self.diffusion.get_lambda(t - 1)
 
                 eps_cond = self.eps_model(z_t, labels)
                 eps_uncond = self.eps_model(z_t, None)
                 eps_theta = (1 + cfg_scale) * eps_cond - cfg_scale * eps_uncond
 
-                alpha = self.diffusion.alpha_lambda(lambda_t)
-                sigma = self.diffusion.sigma_lambda(lambda_t)
-                x_t = (z_t - sigma * eps_theta) / alpha
+                alpha_lambda = self.diffusion.alpha_lambda(lambda_t)
+                sigma_lambda = self.diffusion.sigma_lambda(lambda_t)
+                x_t = (z_t - sigma_lambda * eps_theta) / alpha_lambda
 
-                z_t = self.diffusion.p_sample(z_t, lambda_t, lambda_t_prim, x_t) if t_val < n_steps - 1 else x_t
+                z_t = self.diffusion.p_sample(z_t, lambda_t, lambda_t_prim, x_t)
 
-                if self.args.nb_save is not None and t_val in saving_steps:
-                    print(f"Showing/saving samples from epoch {self.current_epoch} with labels: {labels.cpu().tolist()}")
+                if self.args.nb_save is not None and t_ in saving_steps:
+                    print(f"Showing/saving samples from epoch {self.current_epoch} with labels: {labels.tolist()}")
                     self.show_save(
-                        img_tensor=z_t,
+                        img_tensor=x_t,
                         labels=labels,
                         show=True,
                         save=True,
-                        file_name=f"CFG_epoch_{self.current_epoch}_sample_{t_val}.png"
+                        file_name=f"CFG_epoch_{self.current_epoch}_sample_{t_}.png"
                     )
 
-        # self.eps_model.train()
-        return z_t
+            self.eps_model.train()
+        return x_t
 
     def save_model(self):
         torch.save({
