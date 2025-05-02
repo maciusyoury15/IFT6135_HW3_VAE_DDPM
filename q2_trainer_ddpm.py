@@ -72,7 +72,7 @@ class Trainer:
                 # Calculate the loss
                 with autocast(device_type=args.device, enabled=self.args.fp16_precision):
                     loss = self.diffusion.loss(x0)
-                
+
                 # Zero gradients
                 self.optimizer.zero_grad()
                 # Backward pass
@@ -173,8 +173,8 @@ class Trainer:
         if show:
             plt.show()
         plt.close(fig)
-        
-        
+
+
     def generate_intermediate_samples(self, n_samples=4, img_size=32, steps_to_show=[0,999], n_steps=None, set_seed=False):
         """
         Generate multiple images and return intermediate steps of the diffusion process
@@ -185,26 +185,31 @@ class Trainer:
         Returns:
             List of tensors representing the images at different steps
         """
-        
+
         if set_seed:
             torch.manual_seed(42)
-        
+
         if n_steps is None:
             n_steps = self.args.n_steps
-            
+
         # Start from random noise
-        x = torch.randn(n_samples, 1, img_size, img_size, device=self.args.device, requires_grad=False)
+        x = torch.randn(n_samples, 1, img_size, img_size, device=args.device, requires_grad=False)
 
         # Store images at each step we want to show
         images = []
-        if 0 in steps_to_show:
-            images.append(x.detach().cpu())  # Initial noise
+        images.append(x.detach().cpu().numpy())  # Initial noise
 
-        for step in tqdm(reversed(range(1, n_steps+1, 1))):  # from T-1 to 0
-            t = torch.full((n_samples,), step, device=self.args.device, dtype=torch.long)
+        for step in tqdm(range(1, n_steps+1, 1)):
+            # TODO: Generate intermediate steps
+            # Hint: if GPU crashes, it might be because you accumulate unused gradient ... don't forget to remove gradient
+            #raise NotImplementedError
+            t = torch.full((x.size(0),), step, device=self.args.device, dtype=torch.long)
+
             with torch.no_grad():
-                x = self.diffusion.p_sample(x, t, set_seed=set_seed)
-            if step in steps_to_show:
-                images.append(x.detach().cpu())
+                x = self.diffusion.q_sample(x, t)
 
-        return torch.stack(images)
+            # Store intermediate result if it's a step we want to display
+            if step in steps_to_show:
+                images.append(x.detach().cpu().numpy())
+
+        return images
