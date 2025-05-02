@@ -29,12 +29,6 @@ args.epochs = 20
 
 torch.manual_seed(args.seed)
 
-# print("Epochs: ", args.epochs)
-# print("Batch size: ", args.batch_size)
-# print("CUDA: ", args.cuda)
-# print("Seed: ", args.seed)
-# print("Log interval: ", args.log_interval, "\n\n")
-
 gdrive_dir = '/content/drive/MyDrive/IFT6135_HW3'
 save_dir = os.path.join(gdrive_dir, 'vae')
 os.makedirs(gdrive_dir, exist_ok=True)
@@ -234,8 +228,8 @@ def interpolate_latent_vs_data(model, latent_dim=20, steps=11):
         z1 = torch.randn(1, latent_dim).to(device)
 
         # Decode z0 and z1
-        x0 = model.decode(z0).view(28, 28).cpu()
-        x1 = model.decode(z1).view(28, 28).cpu()
+        x0 = model.decode(z0).view(28, 28).to(device)
+        x1 = model.decode(z1).view(28, 28).to(device)
 
         alphas = torch.linspace(0, 1, steps).to(device)
 
@@ -260,9 +254,9 @@ def plot_interpolations(latent_imgs, data_imgs, save_dir=save_dir):
     fig, axs = plt.subplots(2, steps, figsize=(steps, 2))
 
     for i in range(steps):
-        axs[0, i].imshow(latent_imgs[i], cmap='gray')
+        axs[0, i].imshow(latent_imgs[i].cpu().numpy(), cmap='gray')
         axs[0, i].axis('off')
-        axs[1, i].imshow(data_imgs[i], cmap='gray')
+        axs[1, i].imshow(data_imgs[i].cpu().numpy(), cmap='gray')
         axs[1, i].axis('off')
 
     axs[0, 0].set_ylabel("Latent", fontsize=12)
