@@ -172,7 +172,7 @@ def generate_samples(model, n_samples=16, latent_dim=20):
     model.eval()
     with torch.no_grad():
         z = torch.randn(n_samples, latent_dim).to(device)  # Sample from N(0, I)
-        samples = model.decode(z).cpu()  # Decode to image space
+        samples = model.decode(z).to(device)  # Decode to image space
         return samples.view(n_samples, 1, 28, 28)  # For MNIST-like data
 
 
@@ -205,7 +205,7 @@ def latent_traversal_grid(model, latent_dim=20, steps=5, epsilon=2.0):
             for shift in traversal_range:
                 z_new = base_z.clone()
                 z_new[0, i] += shift
-                img = model.decode(z_new).view(28, 28).cpu()
+                img = model.decode(z_new).view(28, 28).to(device)
                 row.append(img)
             images.append(row)
 
@@ -234,8 +234,8 @@ def interpolate_latent_vs_data(model, latent_dim=20, steps=11):
         z1 = torch.randn(1, latent_dim).to(device)
 
         # Decode z0 and z1
-        x0 = model.decode(z0).view(28, 28).cpu()
-        x1 = model.decode(z1).view(28, 28).cpu()
+        x0 = model.decode(z0).view(28, 28).to(device)
+        x1 = model.decode(z1).view(28, 28).to(device)
 
         alphas = torch.linspace(0, 1, steps).to(device)
 
@@ -243,7 +243,7 @@ def interpolate_latent_vs_data(model, latent_dim=20, steps=11):
         latent_imgs = []
         for alpha in alphas:
             z_alpha = alpha * z0 + (1 - alpha) * z1
-            x_alpha = model.decode(z_alpha).view(28, 28).cpu()
+            x_alpha = model.decode(z_alpha).view(28, 28).to(device)
             latent_imgs.append(x_alpha)
 
         # Data space interpolation
