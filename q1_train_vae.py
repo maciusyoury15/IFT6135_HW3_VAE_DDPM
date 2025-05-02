@@ -148,8 +148,10 @@ def plot_losses(train_losses, val_losses, save_dir=save_dir):
     plt.figure(figsize=(8, 5))
 
     # Plot with specified colors
-    plt.plot(epochs, train_losses, color='red', marker='o', label='Training Loss')
-    plt.plot(epochs, val_losses, color='blue', marker='s', label='Validation Loss')
+    plt.plot(epochs, train_losses, color='red'#, marker='o'
+             , label='Training Loss')
+    plt.plot(epochs, val_losses, color='blue'#, marker='s'
+             , label='Validation Loss')
 
     # Dashed threshold line
     plt.axhline(y=104, color='red', linestyle='--', label='Target Threshold (104)')
