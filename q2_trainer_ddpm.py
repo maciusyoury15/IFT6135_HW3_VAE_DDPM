@@ -6,7 +6,7 @@ import copy
 import os
 import numpy as np
 
-from ddpm_utils.args import * 
+from ddpm_utils.args import *
 
 torch.manual_seed(42)
 
@@ -125,35 +125,33 @@ class Trainer:
                 ],
                 device=self.args.device,
             )
-
             if self.args.nb_save is not None:
-                saving_steps = [n_steps - 1]
-
+                saving_steps = [self.args["n_steps"] - 1]
             # Remove noise for $T$ steps
-            for step in tqdm(range(n_steps)):
-                t_val = n_steps - 1 - step
-                t = torch.full((x.size(0),), t_val, device=self.args.device, dtype=torch.long)
+            for t_ in tqdm(range(n_steps)):
 
+                # TODO: Sample x_t
+                #raise NotImplementedError
+
+                t = torch.full((x.size(0),), n_steps - 1 - t_, device=self.args.device, dtype=torch.long)
                 x = self.diffusion.p_sample(x, t)
 
-                if self.args.nb_save is not None and t_val in saving_steps:
+                if self.args.nb_save is not None and t_ in saving_steps:
                     print(f"Showing/saving samples from epoch {self.current_epoch}")
                     self.show_save(
                         x,
                         show=True,
                         save=True,
-                        file_name=f"DDPM_epoch_{self.current_epoch}_sample_{step}.png",
+                        file_name=f"DDPM_epoch_{self.current_epoch}_sample_{t_}.png",
                     )
-
         return x
-
 
     def save_model(self):
         torch.save({
                 'epoch': self.current_epoch,
                 'model_state_dict': self.eps_model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
-                }, self.args.MODEL_PATH)
+                }, args.MODEL_PATH)
 
     def show_save(self, img_tensor, show=True, save=True, file_name="sample.png"):
         fig, axs = plt.subplots(3, 3, figsize=(10, 10))  # Create a 4x4 grid of subplots
@@ -168,8 +166,7 @@ class Trainer:
 
         plt.tight_layout()
         if save:
-            os.makedirs("images", exist_ok=True)
-            plt.savefig(os.path.join("images", file_name))
+            plt.savefig('images/' + file_name)
         if show:
             plt.show()
         plt.close(fig)
@@ -190,7 +187,7 @@ class Trainer:
             torch.manual_seed(42)
 
         if n_steps is None:
-            n_steps = self.args.n_steps
+            n_steps = args.n_steps
 
         # Start from random noise
         x = torch.randn(n_samples, 1, img_size, img_size, device=args.device, requires_grad=False)
