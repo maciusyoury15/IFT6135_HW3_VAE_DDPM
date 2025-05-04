@@ -4,7 +4,6 @@ from torch import nn
 from typing import Optional, Tuple
 
 
-
 class DenoiseDiffusion():
     def __init__(self, eps_model: nn.Module, n_steps: int, device: torch.device):
         super().__init__()

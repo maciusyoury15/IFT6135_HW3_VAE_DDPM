@@ -4,11 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e322ce76-4012-4822-8f95-423a6ffdd501" name="Changes" comment="cfg updates">
+    <list default="true" id="e322ce76-4012-4822-8f95-423a6ffdd501" name="Changes" comment="ddpm updates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02 - DDPM.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/02 - DDPM.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ddpm_utils/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/ddpm_utils/dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ddpm_utils/unet.py" beforeDir="false" afterPath="$PROJECT_DIR$/ddpm_utils/unet.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/q2_ddpm.py" beforeDir="false" afterPath="$PROJECT_DIR$/q2_ddpm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/q2_trainer_ddpm.py" beforeDir="false" afterPath="$PROJECT_DIR$/q2_trainer_ddpm.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +82,7 @@
       <workItem from="1746136485892" duration="8356000" />
       <workItem from="1746209520937" duration="11051000" />
       <workItem from="1746311629181" duration="2658000" />
-      <workItem from="1746314544394" duration="6606000" />
+      <workItem from="1746314544394" duration="9384000" />
     </task>
     <task id="LOCAL-00001" summary="vae">
       <option name="closed" value="true" />
@@ -227,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746314943255</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="ddpm updates">
+      <option name="closed" value="true" />
+      <created>1746374235338</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1746374235338</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -251,9 +260,9 @@
     <MESSAGE value="ddpm" />
     <MESSAGE value="cfg trainer updates" />
     <MESSAGE value="vae updates" />
-    <MESSAGE value="ddpm updates" />
     <MESSAGE value="cfg updates" />
-    <option name="LAST_COMMIT_MESSAGE" value="cfg updates" />
+    <MESSAGE value="ddpm updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="ddpm updates" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/HW3$q1_train_vae.coverage" NAME="q1_train_vae Coverage Results" MODIFIED="1745617395725" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

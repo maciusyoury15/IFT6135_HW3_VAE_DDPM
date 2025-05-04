@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,7 +6,7 @@ import torch.nn.functional as F
 class SelfAttention(nn.Module):
     def __init__(self, channels):
         super(SelfAttention, self).__init__()
-        self.channels = channels        
+        self.channels = channels
         self.mha = nn.MultiheadAttention(channels, 4, batch_first=True)
         self.ln = nn.LayerNorm([channels])
         self.ff_self = nn.Sequential(
@@ -104,12 +103,11 @@ class UNet(nn.Module):
         self.remove_deep_conv = remove_deep_conv
         self.inc = DoubleConv(c_in, 32)
         self.down1 = Down(32, 64)
-        #self.sa1 = SelfAttention(64)
+        # self.sa1 = SelfAttention(64)
         self.down2 = Down(64, 128)
-        #self.sa2 = SelfAttention(128)
+        # self.sa2 = SelfAttention(128)
         self.down3 = Down(128, 128)
-        #self.sa3 = SelfAttention(128)
-
+        # self.sa3 = SelfAttention(128)
 
         if remove_deep_conv:
             self.bot1 = DoubleConv(128, 128)
@@ -120,17 +118,17 @@ class UNet(nn.Module):
             self.bot3 = DoubleConv(256, 128)
 
         self.up1 = Up(256, 64)
-        #self.sa4 = SelfAttention(64)
+        # self.sa4 = SelfAttention(64)
         self.up2 = Up(128, 32)
-        #self.sa5 = SelfAttention(32)
+        # self.sa5 = SelfAttention(32)
         self.up3 = Up(64, 32)
-        #self.sa6 = SelfAttention(32)
+        # self.sa6 = SelfAttention(32)
         self.outc = nn.Conv2d(32, c_out, kernel_size=1)
 
     def pos_encoding(self, t, channels):
         inv_freq = 1.0 / (
-            10000
-            ** (torch.arange(0, channels, 2, device=t.device).float() / channels)
+                10000
+                ** (torch.arange(0, channels, 2, device=t.device).float() / channels)
         )
         pos_enc_a = torch.sin(t.repeat(1, channels // 2) * inv_freq)
         pos_enc_b = torch.cos(t.repeat(1, channels // 2) * inv_freq)
@@ -140,11 +138,11 @@ class UNet(nn.Module):
     def unet_forwad(self, x, t):
         x1 = self.inc(x)
         x2 = self.down1(x1, t)
-        #x2 = self.sa1(x2)
+        # x2 = self.sa1(x2)
         x3 = self.down2(x2, t)
-        #x3 = self.sa2(x3)
+        # x3 = self.sa2(x3)
         x4 = self.down3(x3, t)
-        #x4 = self.sa3(x4)
+        # x4 = self.sa3(x4)
 
         x4 = self.bot1(x4)
         if not self.remove_deep_conv:
@@ -152,14 +150,14 @@ class UNet(nn.Module):
         x4 = self.bot3(x4)
 
         x = self.up1(x4, x3, t)
-        #x = self.sa4(x)
+        # x = self.sa4(x)
         x = self.up2(x, x2, t)
-        #x = self.sa5(x)
+        # x = self.sa5(x)
         x = self.up3(x, x1, t)
-        #x = self.sa6(x)
+        # x = self.sa6(x)
         output = self.outc(x)
         return output
-    
+
     def forward(self, x, t):
         t = t.unsqueeze(-1)
         t = self.pos_encoding(t, self.time_dim)
@@ -167,15 +165,13 @@ class UNet(nn.Module):
 
 
 def load_weights(eps_model, PATH):
-
     try:
         checkpoint = torch.load(PATH, weights_only=True)
         eps_model.load_state_dict(checkpoint['model_state_dict'])
         eps_model.eval()
-        print('UNet model loaded (in eval mode)!') 
-        return eps_model
-        
-    except:
-        print('No weights to load') 
+        print('UNet model loaded (in eval mode)!')
         return eps_model
 
+    except:
+        print('No weights to load')
+        return eps_model
