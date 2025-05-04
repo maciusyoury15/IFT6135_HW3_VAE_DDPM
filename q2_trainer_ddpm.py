@@ -192,12 +192,12 @@ class Trainer:
         images = []
         images.append(x.detach().cpu().numpy())  # Initial noise
 
-        for step in tqdm(range(1, n_steps+1, 1)):
-
-            t = torch.full((x.size(0),), step, device=self.args.device, dtype=torch.long)
+        for step in tqdm(range(1, n_steps + 1, 1)):
+            t_ = n_steps - step
+            t = torch.full((n_samples,), t_, device=self.args.device, dtype=torch.long)
 
             with torch.no_grad():
-                x = self.diffusion.q_sample(x, t)
+                x = self.diffusion.p_sample(x, t, set_seed=set_seed)
 
             # Store intermediate result if it's a step we want to display
             if step in steps_to_show:
