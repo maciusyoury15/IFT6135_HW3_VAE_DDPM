@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e322ce76-4012-4822-8f95-423a6ffdd501" name="Changes" comment="ddpm updates">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02 - DDPM.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/02 - DDPM.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ddpm_utils/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/ddpm_utils/dataset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ddpm_utils/unet.py" beforeDir="false" afterPath="$PROJECT_DIR$/ddpm_utils/unet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/q2_ddpm.py" beforeDir="false" afterPath="$PROJECT_DIR$/q2_ddpm.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +78,7 @@
       <workItem from="1746136485892" duration="8356000" />
       <workItem from="1746209520937" duration="11051000" />
       <workItem from="1746311629181" duration="2658000" />
-      <workItem from="1746314544394" duration="9384000" />
+      <workItem from="1746314544394" duration="9850000" />
     </task>
     <task id="LOCAL-00001" summary="vae">
       <option name="closed" value="true" />
@@ -236,7 +232,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746374235338</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="ddpm updates">
+      <option name="closed" value="true" />
+      <created>1746376884432</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1746376884432</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
