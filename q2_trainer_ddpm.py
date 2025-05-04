@@ -115,7 +115,6 @@ class Trainer:
             n_steps = self.args.n_steps
 
         with torch.no_grad():
-            # $x_T \sim p(x_T) = \mathcal{N}(x_T; \mathbf{0}, \mathbf{I})$
             x = torch.randn(
                 [
                     self.args.n_samples,
@@ -130,10 +129,7 @@ class Trainer:
             # Remove noise for $T$ steps
             for t_ in tqdm(range(n_steps)):
 
-                # TODO: Sample x_t
-                #raise NotImplementedError
-
-                t = torch.full((x.size(0),), n_steps - 1 - t_, device=self.args.device, dtype=torch.long)
+                t = torch.full((x.size(0),), n_steps - 1 - t_, device=x.device, dtype=torch.long)
                 x = self.diffusion.p_sample(x, t)
 
                 if self.args.nb_save is not None and t_ in saving_steps:
@@ -197,9 +193,7 @@ class Trainer:
         images.append(x.detach().cpu().numpy())  # Initial noise
 
         for step in tqdm(range(1, n_steps+1, 1)):
-            # TODO: Generate intermediate steps
-            # Hint: if GPU crashes, it might be because you accumulate unused gradient ... don't forget to remove gradient
-            #raise NotImplementedError
+
             t = torch.full((x.size(0),), step, device=self.args.device, dtype=torch.long)
 
             with torch.no_grad():

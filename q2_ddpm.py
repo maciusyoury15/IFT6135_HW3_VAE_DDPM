@@ -25,56 +25,29 @@ class DenoiseDiffusion():
 
     ### FORWARD SAMPLING
     def q_xt_x0(self, x0: torch.Tensor, t: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        # batch_size = x0.shape[0]
-        # sqrt_alpha_bar = torch.sqrt(self.alpha_bar[t]).view(batch_size, 1, 1, 1)
-        # one_minus_alpha_bar = 1.0 - self.alpha_bar[t]
-        #
-        # var = one_minus_alpha_bar.view(batch_size, 1, 1, 1)
-        # mean = sqrt_alpha_bar * x0
-
-        mean = self.gather(self.alpha_bar.sqrt(), t) * x0
-        var = 1.0 - self.gather(self.alpha_bar, t)
-
+        alpha_bar_t = self.gather(self.alpha_bar, t)
+        mean = torch.sqrt(alpha_bar_t) * x0
+        var = 1.0 - alpha_bar_t
         return mean, var
 
     def q_sample(self, x0: torch.Tensor, t: torch.Tensor, eps: Optional[torch.Tensor] = None):
         if eps is None:
             eps = torch.randn_like(x0)
 
-        # sqrt_alpha_bar = torch.sqrt(self.alpha_bar[t]).view(-1, 1, 1, 1)
-        # one_minus_alpha_bar = 1.0 - self.alpha_bar[t]
-        # sqrt_one_minus_alpha_bar = torch.sqrt(one_minus_alpha_bar).view(-1, 1, 1, 1)
-        #
-        # sample = sqrt_alpha_bar * x0 + sqrt_one_minus_alpha_bar * eps
-        # return sample
-
         mean, var = self.q_xt_x0(x0, t)
-        return mean + var.sqrt() * eps
+        sample = mean + torch.sqrt(var) * eps
+        return sample
 
     ### REVERSE SAMPLING
     def p_xt_prev_xt(self, xt: torch.Tensor, t: torch.Tensor):
-        # batch_size = xt.shape[0]
-
-        # alpha_t = self.alpha[t].view(batch_size, 1, 1, 1)
-        # beta_t = self.beta[t].view(batch_size, 1, 1, 1)
-        # alpha_bar_t = self.alpha_bar[t].view(batch_size, 1, 1, 1)
-        #
-        # coef1 = 1 / torch.sqrt(alpha_t)
-        # coef2 = (1 - alpha_t) / torch.sqrt(1 - alpha_bar_t)
-        #
-        # eps_theta = self.eps_model(xt, t)
-        # mu_theta = coef1 * (xt - coef2 * eps_theta)
-        # var = beta_t
-
-        eps_theta = self.eps_model(xt, t)
         beta_t = self.gather(self.beta, t)
         alpha_t = self.gather(self.alpha, t)
         alpha_bar_t = self.gather(self.alpha_bar, t)
 
-        coef1 = 1 / alpha_t.sqrt()
-        coef2 = beta_t / (1 - alpha_bar_t).sqrt()
-        mu_theta = coef1 * (xt - coef2 * eps_theta)
-        var = self.gather(self.sigma2, t)
+        eps_theta = self.eps_model(xt, t)
+        eps_coef = beta_t / torch.sqrt(1 - alpha_bar_t)
+        mu_theta = (1 / torch.sqrt(alpha_t)) * (xt - eps_coef * eps_theta)
+        var = beta_t
 
         return mu_theta, var
 
@@ -83,33 +56,11 @@ class DenoiseDiffusion():
         if set_seed:
             torch.manual_seed(42)
 
-        # # Predict noise using the model
-        # eps_theta = self.eps_model(xt, t)
-        #
-        # batch_size = xt.shape[0]
-        # beta_t = self.beta[t].view(batch_size, 1, 1, 1)
-        # alpha_t = self.alpha[t].view(batch_size, 1, 1, 1)
-        # alpha_bar_t = self.alpha_bar[t].view(batch_size, 1, 1, 1)
-        #
-        # # Compute mu_theta
-        # coef1 = 1 / torch.sqrt(alpha_t)
-        # coef2 = (1 - alpha_t) / torch.sqrt(1 - alpha_bar_t)
-        # mu_theta = coef1 * (xt - coef2 * eps_theta)
-        #
-        # # Sample noise
-        # noise = torch.randn_like(xt)
-        #
-        # # If t == 0, just return the mean (no noise at step 0)
-        # is_zero = (t == 0).float().view(-1, 1, 1, 1)
-        # sample = mu_theta + (1 - is_zero) * torch.sqrt(beta_t) * noise
-        #
-        # return sample
-
-        mu, var = self.p_xt_prev_xt(xt, t)
-        if (t == 0).all():
-            return mu
+        mu_theta, var = self.p_xt_prev_xt(xt, t)
         noise = torch.randn_like(xt)
-        return mu + var.sqrt() * noise
+        nonzero_mask = (t != 0).float().view(-1, 1, 1, 1)
+        sample = mu_theta + nonzero_mask * (torch.sqrt(var) * noise)
+        return sample
 
     ### LOSS
     def loss(self, x0: torch.Tensor, noise: Optional[torch.Tensor] = None, set_seed=False):
@@ -123,16 +74,13 @@ class DenoiseDiffusion():
         )
         if noise is None:
             noise = torch.randn_like(x0)
-        # TODO
 
-        # 1. Sample x_t using q_sample
-        xt = self.q_sample(x0=x0, t=t, eps=noise)
+        alpha_bar_t = self.gather(self.alpha_bar, t)
 
-        # 2. Predict the noise with eps_model
-        # eps_theta = self.eps_model(xt, t)
-        eps_theta = self.eps_model(xt, t)
+        x_t = torch.sqrt(alpha_bar_t) * x0 + torch.sqrt(1 - alpha_bar_t) * noise
 
-        # 3. Compute the loss
-        loss = (noise - eps_theta) ** 2
+        predicted_noise = self.eps_model(x_t, t)
+
+        loss = (noise - predicted_noise) ** 2
 
         return loss.sum(dim=dim).mean()
